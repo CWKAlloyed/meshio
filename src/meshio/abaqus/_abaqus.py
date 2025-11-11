@@ -400,7 +400,7 @@ def _read_set(f, params_map):
 
 
 def write(
-    filename, mesh: Mesh, float_fmt: str = ".16e", translate_cell_names: bool = True
+    filename, mesh: Mesh, float_fmt: str = ".16e", translate_cell_names: bool = True, meshio_to_abaqus_type_custom: dict[str, str] | None = None
 ) -> None:
     with open_file(filename, "wt") as f:
         f.write("*HEADING\n")
@@ -413,10 +413,14 @@ def write(
         eid = 0
         for cell_block in mesh.cells:
             cell_type = cell_block.type
-            node_idcs = cell_block.data
-            name = (
-                meshio_to_abaqus_type[cell_type] if translate_cell_names else cell_type
-            )
+            node_idcs = cell_block.data 
+            if translate_cell_names:
+                if meshio_to_abaqus_type_custom is not None and cell_type in meshio_to_abaqus_type_custom:
+                    name = meshio_to_abaqus_type_custom[cell_type]
+                else:
+                    name = meshio_to_abaqus_type[cell_type]
+            else:
+                name = cell_type
             f.write(f"*ELEMENT, TYPE={name}\n")
             for row in node_idcs:
                 eid += 1
